@@ -2,7 +2,7 @@
     // License: "https://github.com/PMSI-AlignAlytics/dimple/blob/master/MIT-LICENSE.txt"
     // Source: /src/objects/series/begin.js
     // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series
-    dimple.series = function (chart, categoryFields, xAxis, yAxis, zAxis, colorAxis, plotFunction, aggregateFunction, stacked) {
+    dimple.series = function (chart, categoryFields, xAxis, yAxis, zAxis, pAxis, colorAxis, plotFunction, aggregateFunction, stacked) {
 
         // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-chart
         this.chart = chart;
@@ -12,6 +12,8 @@
         this.y = yAxis;
         // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-z
         this.z = zAxis;
+        // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-z
+        this.p = pAxis;
         // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-c
         this.c = colorAxis;
         // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-plot
@@ -30,6 +32,8 @@
         this.lineWeight = 2;
         // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-lineMarkers
         this.lineMarkers = false;
+        // Help: http://github.com/PMSI-AlignAlytics/dimple/wiki/dimple.series#wiki-pieInnerRadius
+        this.innerRadiusPct = 0;
 
         // Any event handlers joined to this series
         this._eventHandlers = [];

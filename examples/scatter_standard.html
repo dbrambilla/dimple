@@ -1,6 +1,6 @@
 <div id="chartContainer">
-  <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script src="/dist/dimple.v1.min.js"></script>
+  <script src="/lib/d3.v3.min.js"></script>
+  <script src="/dist/dimple.v1.js"></script>
   <script type="text/javascript">
     var svg = dimple.newSvg("#chartContainer", 590, 400);
       d3.tsv("/data/example_data.tsv", function (data) {
@@ -9,7 +9,8 @@
         myChart.setBounds(60, 30, 500, 330)
         myChart.addMeasureAxis("x", "Unit Sales");
         myChart.addMeasureAxis("y", "Operating Profit");
-        myChart.addSeries(["SKU", "Channel"], dimple.plot.bubble);
+        myChart.addMeasureAxis("p", "Gross Profit");
+        myChart.addSeries(["SKU", "Channel"], dimple.plot.pie);
         myChart.addLegend(200, 10, 360, 20, "right");
         myChart.draw();
       });

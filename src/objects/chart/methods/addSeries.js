@@ -11,6 +11,7 @@
             var xAxis = null,
                 yAxis = null,
                 zAxis = null,
+                pAxis = null,
                 colorAxis = null,
                 series;
             // Iterate the array and pull out the relevant axes
@@ -22,6 +23,8 @@
                         yAxis = axis;
                     } else if (zAxis === null && axis.position[0] === "z") {
                         zAxis = axis;
+                    } else if (pAxis === null && axis.position[0] === "p") {
+                        pAxis = axis;
                     } else if (colorAxis === null && axis.position[0] === "c") {
                         colorAxis = axis;
                     }
@@ -38,6 +41,7 @@
                 xAxis,
                 yAxis,
                 zAxis,
+                pAxis,
                 colorAxis,
                 plotFunction,
                 dimple.aggregateMethod.sum,

@@ -114,6 +114,10 @@
                 this._scale = d3.scale.linear()
                     .range([this.chart.height / 300, this.chart.height / 10])
                     .domain([this._min, this._max]);
+            } else if (this.position.length > 0 && this.position[0] === "p") {
+                this._scale = d3.scale.linear()
+                    .range([0, 365])
+                    .domain([this._min, this._max]);
             } else if (this.position.length > 0 && this.position[0] === "c") {
                 this._scale = d3.scale.linear()
                     .range([0, (this.colors === null || this.colors.length === 1 ? 1 : this.colors.length - 1)])

@@ -13,7 +13,7 @@
                         // This is repeated for each axis using a small anon function
                         getField = function (axis, row) {
                             var returnField = [];
-                            if (axis !== null) {
+                            if (axis !== null && axis !== undefined) {
                                 if (axis._hasTimeField()) {
                                     returnField.push(axis._parseDate(row[axis.timeField]));
                                 } else if (axis._hasCategories()) {
@@ -25,18 +25,18 @@
                             return returnField;
                         },
                         // Catch a non-numeric value and re-calc as count
-                        useCount = { x: false, y: false, z: false, c: false },
+                        useCount = { x: false, y: false, z: false, p: false, c: false },
                         // If the elements are grouped a unique list of secondary category values will be required
                         secondaryElements = { x: [], y: [] },
                         // Get the x and y totals for percentages.  This cannot be done in the loop above as we need the data aggregated before we get an abs total.
                         // otherwise it will wrongly account for negatives and positives rolled together.
-                        totals = { x: [], y: [], z: [] },
+                        totals = { x: [], y: [], z: [], p: [] },
                         colorBounds = { min: null, max: null },
                         tot,
-                        running = { x: [], y: [], z: [] },
+                        running = { x: [], y: [], z: [], p: [] },
                         addedCats = [],
                         catTotals = {},
-                        grandTotals = { x: 0, y: 0, z: 0 },
+                        grandTotals = { x: 0, y: 0, z: 0, p: 0 },
                         key,
                         storyCat = "",
                         orderedStoryboardArray = [],
@@ -70,6 +70,8 @@
                         seriesCat = series.categoryFields[0];
                         if (series.c !== null && series.c !== undefined && series.c._hasMeasure()) {
                             rules.push({ ordering : series.c.measure, desc : true });
+                        } else if (series.p !== null && series.p !== undefined && series.p._hasMeasure()) {
+                            rules.push({ ordering : series.p.measure, desc : true });
                         } else if (series.z !== null && series.z !== undefined && series.z._hasMeasure()) {
                             rules.push({ ordering : series.z.measure, desc : true });
                         } else if (series.x._hasMeasure()) {
@@ -104,23 +106,45 @@
                             xField = getField(series.x, d),
                             yField = getField(series.y, d),
                             zField = getField(series.z, d),
+                            pField = getField(series.p, d),
                             // Get the aggregate field using the other fields if necessary
                             aggField = [],
+                            pieAggField = [],
                             key,
                             k,
                             newRow,
                             updateData;
-                        if (series.categoryFields === null || series.categoryFields === undefined || series.categoryFields.length === 0) {
-                            aggField = ["All"];
-                        } else if (series.categoryFields.length === 1 && d[series.categoryFields[0]] === undefined) {
-                            aggField = [series.categoryFields[0]];
+                        if (series.p !== null && series.p !== undefined) {
+                            // The pie axis requires x, y and z to size based on dimensions
+                            // excluding p and p and c to size including them
+                            if (series.categoryFields === null || series.categoryFields === undefined || series.categoryFields.length === 0) {
+                                aggField = ["All"];
+                                pieAgg = ["All"];
+                            } else {
+                                series.categoryFields.forEach(function (c, i) {
+                                    if (i < series.categoryFields.length - 1) {
+                                        pieAgg.push(d[c]);
+                                    }
+                                    if (d[c] === undefined) {
+                                        aggField.push(c);
+                                    } else {
+                                        aggField.push(d[cat]);
+                                    }
+                                }, this);
+                            }
                         } else {
-                            series.categoryFields.forEach(function (cat) {
-                                aggField.push(d[cat]);
-                            }, this);
+                            if (series.categoryFields === null || series.categoryFields === undefined || series.categoryFields.length === 0) {
+                                aggField = ["All"];
+                            } else if (series.categoryFields.length === 1 && d[series.categoryFields[0]] === undefined) {
+                                aggField = [series.categoryFields[0]];
+                            } else {
+                                series.categoryFields.forEach(function (cat) {
+                                    aggField.push(d[cat]);
+                                }, this);
+                            }
                         }
                         // Add a key
-                        key = aggField.join("/") + "_" + xField.join("/") + "_" + yField.join("/") + "_" + zField.join("/");
+                        key = aggField.join("/") + "_" + xField.join("/") + "_" + yField.join("/") + "_" + zField.join("/") + "_" + pField.join("/");
                         // See if this field has already been added. 
                         for (k = 0; k < returnData.length; k += 1) {
                             if (returnData[k].key === key) {
@@ -142,6 +166,9 @@
                                 zField: zField,
                                 zValue: null,
                                 zCount: 0,
+                                pField: pField,
+                                pValue: null,
+                                pCount: 0,
                                 cValue: 0,
                                 cCount: 0,
                                 x: 0,
@@ -157,6 +184,7 @@
                                 xValueList: [],
                                 yValueList: [],
                                 zValueList: [],
+                                pValueList: [],
                                 cValueList: [],
                                 fill: {},
                                 stroke: {}
@@ -214,6 +242,7 @@
                         updateData(series.x, this.storyboard);
                         updateData(series.y, this.storyboard);
                         updateData(series.z, this.storyboard);
+                        updateData(series.p, this.storyboard);
                         updateData(series.c, this.storyboard);
                     }, this);
                     // Get secondary elements if necessary
@@ -248,6 +277,11 @@
                             tot = (totals.z[ret.zField.join("/")] === null || totals.z[ret.zField.join("/")] === undefined ? 0 : totals.z[ret.zField.join("/")]) + (series.z._hasMeasure() ? Math.abs(ret.zValue) : 0);
                             totals.z[ret.zField.join("/")] = tot;
                         }
+                        if (series.p !== null) {
+                            if (useCount.p === true) { ret.pValue = ret.pValueList.length; }
+                            tot = (totals.p[ret.pField.join("/")] === null || totals.p[ret.pField.join("/")] === undefined ? 0 : totals.p[ret.pField.join("/")]) + (series.p._hasMeasure() ? Math.abs(ret.pValue) : 0);
+                            totals.p[ret.pField.join("/")] = tot;
+                        }
                         if (series.c !== null) {
                             if (colorBounds.min === null || ret.cValue < colorBounds.min) { colorBounds.min = ret.cValue; }
                             if (colorBounds.max === null || ret.cValue > colorBounds.max) { colorBounds.max = ret.cValue; }
@@ -259,6 +293,7 @@
                     for (key in totals.x) { if (totals.x.hasOwnProperty(key)) { grandTotals.x += totals.x[key]; } }
                     for (key in totals.y) { if (totals.y.hasOwnProperty(key)) { grandTotals.y += totals.y[key]; } }
                     for (key in totals.z) { if (totals.z.hasOwnProperty(key)) { grandTotals.z += totals.z[key]; } }
+                    for (key in totals.p) { if (totals.p.hasOwnProperty(key)) { grandTotals.p += totals.p[key]; } }
 
                     returnData.forEach(function (ret) {
                         var baseColor,
@@ -277,7 +312,7 @@
                                     if (!axis._hasCategories()) {
                                         value = (axis.showPercent ? ret[pos + "Value"] / totals[opp][ret[opp + "Field"].join("/")] : ret[pos + "Value"]);
                                         totalField = ret[opp + "Field"].join("/") + (ret[pos + "Value"] >= 0);
-                                        cumValue = running[pos][totalField] = ((running[pos][totalField] === null || running[pos][totalField] === undefined || pos === "z") ? 0 : running[pos][totalField]) + value;
+                                        cumValue = running[pos][totalField] = ((running[pos][totalField] === null || running[pos][totalField] === undefined || pos === "z" || pos === "p") ? 0 : running[pos][totalField]) + value;
                                         selectValue = ret[pos + "Bound"] = ret["c" + pos] = (((pos === "x" || pos === "y") && series.stacked) ? cumValue : value);
                                         ret[size] = value;
                                         ret[pos] = selectValue - (((pos === "x" && value >= 0) || (pos === "y" && value <= 0)) ? value : 0);
@@ -306,6 +341,7 @@
                         getAxisData(series.x, "y", "width");
                         getAxisData(series.y, "x", "height");
                         getAxisData(series.z, "z", "r");
+                        getAxisData(series.p, "p", "angle");
 
                         // If there is a color axis
                         if (series.c !== null && colorBounds.min !== null && colorBounds.max !== null) {
